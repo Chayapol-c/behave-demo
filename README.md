@@ -56,27 +56,29 @@ context.response = "abc"
 statement ข้างบนจะเปนการสร้าง **key** response ที่เก็บ **value** "abc"
 ```python
 @given("I am an authenticated user")
-def step_impl(context):
+def test_step_impl(context):
     access_token = os.getenv("GITHUB_ACCESS_TOKEN")
     context.token= access_token
 
-@when('I query the user data for "{username}"')
-def step_impl(context, username: str):
+
+@when(u'I query the user data for "{username}"')
+def test_step_impl(context, username: str):
     user_url = f"{base_url}{username}"
-    res = requests.get(user_url)
+    res = requests.get(user_url, headers={'Authorization': 'token {}'.format(context.token)})
     data = res.json()
     context.email = data["email"]
     context.name = data["name"]
 
-@then('the email is "{email}"')
-def step_impl(context, email: str):
+@then(u"the email is {email}")
+def test_step_impl(context, email:str):
     if not context.email: 
-        assert context.email == None
-    else: 
-        assert context.email == email
+        context.email = "null"
+    assert context.email == email 
 
-@then('the name is "{name}"')
-def step_impl(context, name: str):
+@then(u'the name is {name}')
+def test_step_impl(context, name: str):
+    if '"' in name: 
+        name = name.strip('"')
     assert context.name == name
 ```
 จากชุดคำสั่งข้างต้น context.email และ context.name จะเก็บค่าที่ GET มาจาก `user_url` และจำสามารถเรียกใช้งานต่อได้ใน @then @then
